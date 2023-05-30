@@ -253,7 +253,7 @@
 --OR end_station_id IS NULL
 --OR end_station_name IS NULL;
 
-----There are 1065 rows with station name values that didn't have a matching pair to refer to. They are all associated with three stations in particular.
+----There are 1065 rows with station name values that didn't have a matching pair to refer to in the columns I specified. They are all associated with three stations in particular.
 
 --SELECT * 
 --FROM All_2022_Trips 
@@ -265,7 +265,7 @@
 --WHERE end_station_name = 'Divvy Valet - Oakwood Beach' 
 --AND start_station_id IS NOT NULL;
 
-----I found id matches for these station names in the other columns, so I'll just do a quick update on these three specific instances.
+----I found station id matches for these station names in the other columns, so I'll just do a quick update on these three specific instances.
 
 --UPDATE All_2022_Trips
 --SET end_station_id = 'chargingstx07'
@@ -362,5 +362,21 @@
 
 --EXEC sp_rename 'All_2022_Trips.ride_length_time', 'ride_length', 'COLUMN';
 
-----I'm planning on visually addressing outliers in Tableau, so that is all the cleaning I can spot for right now. It's time to start asking questions to see what the data has to offer.
+----I also want to add a column that lists the names of the days instead of the numbers assigned to them.
+
+--ALTER TABLE All_2022_Trips
+--ADD day_of_week AS (
+--    CASE
+--        WHEN day_number = '1' THEN 'Sunday'
+--        WHEN day_number = '2' THEN 'Monday'
+--        WHEN day_number = '3' THEN 'Tuesday'
+--        WHEN day_number = '4' THEN 'Wednesday'
+--        WHEN day_number = '5' THEN 'Thursday'
+--        WHEN day_number = '6' THEN 'Friday'
+--        WHEN day_number = '7' THEN 'Saturday' 
+--    END
+--);
+
+----I'm planning on visually addressing outliers in Tableau, so that is all the cleaning and transformation I want to do for right now. It's time to start asking questions to see what the data has to offer.
+
 
