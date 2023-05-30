@@ -1,9 +1,11 @@
-----USE Cyclistic
+--USE Cyclistic
 
 ----Total number of rides for each type of rider.
 
 --CREATE VIEW total_rides AS
---SELECT member_casual, COUNT(*) AS number_of_rides
+--SELECT 
+--    member_casual,
+--    COUNT(*) AS number_of_rides
 --FROM All_2022_Trips
 --GROUP BY member_casual;
 
