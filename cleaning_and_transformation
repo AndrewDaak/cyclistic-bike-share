@@ -1,6 +1,6 @@
 ----This project was done using a real data set from a real bike-share company, stripped of personal details and made freely available to the public by Divvy.
 ----I first downloaded all of the 2022 bike-share data (202201-divvy-tripdata.zip, 202202-divvy-tripdata.zip... 202212-divvy-tripdata.zip) from https://divvy-tripdata.s3.amazonaws.com/index.html.
-----Then I extracted the respective .csv files, wrote a macro to add the 'day_number' and 'ride_length' columns, and saved as a workbook (.xlsx), and then imported those workbooks into my local MSSQL database 'Cyclistic' via SQL Server Management Studio.
+----Then I extracted the respective .csv files, wrote a macro to add the 'day_number' and 'ride_length' columns, saved the sheets as workbooks (.xlsx), and then imported those workbooks into my local server database 'Cyclistic' via SQL Server Management Studio.
 ----I renamed the tables to match the format 'TripData2022xx' (where xx is the two digit numeral for the month).
 
 ----The primary questions I'm tasked with answering for the fictional bike-share company Cyclistic are:
