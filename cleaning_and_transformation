@@ -26,7 +26,7 @@
 --SELECT * INTO B_TripData202211_backup FROM TripData202211;
 --SELECT * INTO B_TripData202212_backup FROM TripData202212;
 
-----First, I want to create a new table combining all 12 tables to more easily work with data for the whole year, so I will write a query that checks for column name or data type conflicts between the tables.
+----I want to create a new table combining all 12 tables to more easily work with data for the whole year, so I will write a query that checks for column name or data type conflicts between the tables.
 
 --SELECT 
 --    a.TABLE_NAME AS Table1,
