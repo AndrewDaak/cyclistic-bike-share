@@ -1,6 +1,6 @@
 --USE Cyclistic
 
-----Total number of rides for each type of rider.
+----The total_rides view shows the total number of rides by each rider type.
 
 --CREATE VIEW total_rides AS
 --SELECT 
@@ -9,7 +9,7 @@
 --FROM All_2022_Trips
 --GROUP BY member_casual;
 
-----Average ride length for each type of rider.
+----The avg_ride_length view shows average ride length for each type of rider.
 
 --CREATE VIEW avg_ride_length AS
 --SELECT 
@@ -20,19 +20,9 @@
 --FROM All_2022_Trips
 --GROUP BY member_casual;
 
-----Rides by day of the week.
+----The start_locations_casual view shows what start locations are most popular among casual riders.
 
---CREATE VIEW rides_by_day AS
---SELECT
---    member_casual,
---    day_number,
---    COUNT(*) AS number_of_rides
---FROM All_2022_Trips
---GROUP BY member_casual, day_number;
-
-----Popular stations for casuals.
-
---CREATE VIEW popular_locations_casual AS
+--CREATE VIEW start_locations_casual AS
 --SELECT 
 --    start_station_name,
 --    COUNT(*) AS number_of_rides
@@ -40,9 +30,19 @@
 --WHERE member_casual = 'casual'
 --GROUP BY start_station_name;
 
-----Popular stations for members.
+----The end_locations_casual view shows most popular destinations for casual riders.
 
---CREATE VIEW popular_locations_members AS
+--CREATE VIEW end_locations_casual AS
+--SELECT 
+--    end_station_name,
+--    COUNT(*) AS number_of_rides
+--FROM All_2022_Trips
+--WHERE member_casual = 'casual'
+--GROUP BY end_station_name;
+
+----The start_locations_member view shows what start locations are most popular among members.
+
+--CREATE VIEW start_locations_member AS
 --SELECT 
 --    start_station_name,
 --    COUNT(*) AS number_of_rides
@@ -50,15 +50,17 @@
 --WHERE member_casual = 'member'
 --GROUP BY start_station_name;
 
---CREATE VIEW station_empty_times AS
---SELECT 
---    start_station_name,
---    COUNT(*) AS empty_times
---FROM All_2022_Trips
---WHERE start_station_name NOT IN (SELECT end_station_name FROM All_2022_Trips WHERE ended_at BETWEEN started_at AND started_at + INTERVAL '1' HOUR)
---GROUP BY start_station_name;
+----The end_locations_member view shows most popular destinations for members.
 
-----Prefered rideable type.
+--CREATE VIEW end_locations_member AS
+--SELECT 
+--    end_station_name,
+--    COUNT(*) AS number_of_rides
+--FROM All_2022_Trips
+--WHERE member_casual = 'member'
+--GROUP BY end_station_name;
+
+----The preferred_rideable_type view shows which style of bike is preferable to each rider type.
 
 --CREATE VIEW preferred_rideable_type AS
 --SELECT 
@@ -71,15 +73,14 @@
 --    rideable_type,
 --    member_casual;
 
-----Member vs casual activity through the week.
+----The weekly_activity view shows how rider activity varies depending on the day of the week.
 
 --CREATE VIEW weekly_activity AS
 --SELECT
 --    member_casual,
 --    day_of_week,
---    COUNT(*) as trip_count
+--    COUNT(*) AS trip_count
 --FROM All_2022_Trips
 --GROUP BY
 --    member_casual,
 --    day_of_week;
-
