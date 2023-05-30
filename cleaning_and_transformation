@@ -231,7 +231,7 @@
 --SET start_station_id = new_start_station_id
 --WHERE start_station_id IS NULL;
 
---WITH CTE AS
+WITH CTE AS
 --(
 --  SELECT 
 --    end_station_id, 
@@ -297,11 +297,12 @@
 --	OR end_station_id IS NULL
 --	OR end_station_name IS NULL;
 
-----The end_lat and end_lng columns for end_station_name = 'Yates Blvd & 75th St' are all NULL, but I do have coordinates associated with the same value in start_station_name.
+----The end_lat and end_lng columns for end_station_name = 'Yates Blvd & 75th St' are all NULL, but I do have coordinates associated with the same station in start_station_name.
 ----Since the coordinates for a given station are all fairly close together and they're all describing the same general location, I will simply apply the average of start_lat and start_lng for this station to the all NULL values in end_lat and end_lng.
 	
 --UPDATE All_2022_Trips
---SET end_lat = (
+--SET end_lat =
+--(
 --    SELECT ROUND(AVG(start_lat), 6)
 --    FROM All_2022_Trips
 --    WHERE start_station_id = 'KA1503000024'
@@ -311,7 +312,8 @@
 --AND end_lat IS NULL;
 
 --UPDATE All_2022_Trips
---SET end_lng = (
+--SET end_lng =
+--(
 --    SELECT ROUND(AVG(start_lng), 6)
 --    FROM All_2022_Trips
 --    WHERE start_station_id = 'KA1503000024'
@@ -321,21 +323,21 @@
 --AND end_lng IS NULL;
 
 ----Executing my NULL check again returns 0 rows.
-----Now all of the NULL values in the table have been addressed.
-----Next I'll investigate any further cleaning that might be necessary.
+----Now that all of the NULL values in the table have been addressed, I'll investigate any further cleaning that might be necessary.
 
 ----I know that ride_id should be distinct for each row so I'll check for duplicates.
 
 --SELECT *
 --FROM All_2022_Trips
---WHERE ride_id IN (
+--WHERE ride_id IN
+--(
 --    SELECT ride_id
 --    FROM All_2022_Trips
 --    GROUP BY ride_id
 --    HAVING COUNT(*) > 1
 --);
 
-----There are 18 rows with very large numbers with duplicates in the ride_id column, two sets of 9 numbers. It's not a big enough number of records to have any noticable impact on the broader implications and I don't think it's worth the time to fix, so I'll just delete half of the duplicates.
+----There are 18 rows with very large numbers and duplicates in the ride_id column; two sets of 9 numbers. It's not a big enough number of records to have any noticable impact on the broader implications of the data and I don't think it's worth the time to fix, so I'll just delete half of the duplicates.
 ----It isn't a big enough number of records to have any noticable impact, and I don't think it's really worth the time to fix, so I'll just delete half of the duplicates to avoid any potential issues associated with having duplicate ride_id's down the line.
 ----I'll make another backup first incase this causes any unforseen issues.
 
@@ -343,7 +345,8 @@
 --INTO B_All_2022_Trips_Backup2
 --FROM All_2022_Trips;
 
---WITH cte AS (
+--WITH cte AS
+--(
 --    SELECT ROW_NUMBER() OVER(PARTITION BY ride_id ORDER BY (SELECT NULL)) AS RowNum
 --    FROM All_2022_Trips
 --)
@@ -365,7 +368,8 @@
 ----I also want to add a column that lists the names of the days instead of the numbers assigned to them.
 
 --ALTER TABLE All_2022_Trips
---ADD day_of_week AS (
+--ADD day_of_week AS
+--(
 --    CASE
 --        WHEN day_number = '1' THEN 'Sunday'
 --        WHEN day_number = '2' THEN 'Monday'
