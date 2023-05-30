@@ -231,13 +231,13 @@
 --SET start_station_id = new_start_station_id
 --WHERE start_station_id IS NULL;
 
-WITH CTE AS
+--WITH CTE AS
 --(
---  SELECT 
---    end_station_id, 
---    end_station_name, 
+--  SELECT
+--    end_station_id,
+--    end_station_name,
 --    MAX(end_station_id) OVER (PARTITION BY end_station_name) as new_end_station_id
---  FROM 
+--  FROM
 --    All_2022_Trips
 --)
 --UPDATE CTE 
