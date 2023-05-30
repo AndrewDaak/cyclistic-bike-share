@@ -1,0 +1,366 @@
+----This project was done using a real data set from a real bike-share company, stripped of personal details and made freely available to the public by Divvy.
+----I first downloaded all of the 2022 bike-share data (202201-divvy-tripdata.zip, 202202-divvy-tripdata.zip... 202212-divvy-tripdata.zip) from https://divvy-tripdata.s3.amazonaws.com/index.html.
+----Then I extracted the respective .csv files, wrote a macro to add the 'day_number' and 'ride_length' columns, and saved as a workbook (.xlsx), and then imported those workbooks into my local MSSQL database 'Cyclistic' via SQL Server Management Studio.
+----I renamed the tables to match the format 'TripData2022xx' (where xx is the two digit numeral for the month).
+
+----The primary questions I'm tasked with answering for the fictional bike-share company Cyclistic are:
+----How do annual members and casual riders use Cyclistic bikes differently?
+----Why would casual riders buy Cyclistic annual memberships?
+----How can Cyclistic use digital media to influence casual riders to become members?
+
+----I also want to thorougly inspect and clean all of the data, and explore what other insights I might be able to glean.
+----First I want to back up my original tables, just in case. (I put a 'B_' in front of the backup table names to avoid accidently auto-filling with them when I press [T] -> [Tab])
+
+--USE Cyclistic
+
+--SELECT * INTO B_TripData202201_backup FROM TripData202201;
+--SELECT * INTO B_TripData202202_backup FROM TripData202202;
+--SELECT * INTO B_TripData202203_backup FROM TripData202203;
+--SELECT * INTO B_TripData202204_backup FROM TripData202204;
+--SELECT * INTO B_TripData202205_backup FROM TripData202205;
+--SELECT * INTO B_TripData202206_backup FROM TripData202206;
+--SELECT * INTO B_TripData202207_backup FROM TripData202207;
+--SELECT * INTO B_TripData202208_backup FROM TripData202208;
+--SELECT * INTO B_TripData202209_backup FROM TripData202209;
+--SELECT * INTO B_TripData202210_backup FROM TripData202210;
+--SELECT * INTO B_TripData202211_backup FROM TripData202211;
+--SELECT * INTO B_TripData202212_backup FROM TripData202212;
+
+----First, I want to create a new table combining all 12 tables to more easily work with data for the whole year, so I will write a query that checks for column name or data type conflicts between the tables.
+
+--SELECT 
+--    a.TABLE_NAME AS Table1,
+--    b.TABLE_NAME AS Table2,
+--    a.COLUMN_NAME,
+--    a.DATA_TYPE AS DataType1,
+--    b.DATA_TYPE AS DataType2
+--FROM 
+--    INFORMATION_SCHEMA.COLUMNS a
+--JOIN 
+--    INFORMATION_SCHEMA.COLUMNS b
+--ON 
+--    a.COLUMN_NAME = b.COLUMN_NAME
+--WHERE 
+--    a.TABLE_NAME IN ('TripData202201', 'TripData202202', 'TripData202203', 'TripData202204', 'TripData202205', 'TripData202206', 'TripData202207', 'TripData202208', 'TripData202209', 'TripData202210', 'TripData202211', 'TripData202212')
+--AND 
+--    b.TABLE_NAME IN ('TripData202201', 'TripData202202', 'TripData202203', 'TripData202204', 'TripData202205', 'TripData202206', 'TripData202207', 'TripData202208', 'TripData202209', 'TripData202210', 'TripData202211', 'TripData202212')
+--AND
+--    a.TABLE_NAME <> b.TABLE_NAME
+--AND
+--    a.DATA_TYPE <> b.DATA_TYPE
+
+----There are data type conflicts between the start_station_id columns and the end_station_id columns, so I will inspect a sample.
+
+--SELECT TOP 10 start_station_id
+--FROM TripData202205
+--WHERE start_station_id IS NOT NULL;
+
+--SELECT TOP 10 start_station_id
+--FROM TripData202204
+--WHERE start_station_id IS NOT NULL;
+
+----Some of the months contain station id's which don't follow the same naming convention as the rest.
+----Given that these values are simply used to identify a corresponding station, I will convert the conflicting floats to nvarchar so that I can execute a union.
+
+----For start_station_id column.
+
+--ALTER TABLE TripData202201
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202202
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202203
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202204
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202205
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202206
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202207
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202208
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202209
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202210
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202211
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202212
+--ALTER COLUMN start_station_id NVARCHAR(255);
+
+----For end_station_id column.
+
+--ALTER TABLE TripData202201
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202202
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202203
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202204
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202205
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202206
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202207
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202208
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202209
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202210
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202211
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+--ALTER TABLE TripData202212
+--ALTER COLUMN end_station_id NVARCHAR(255);
+
+----Executing the initial conflict check again now yields no results, so I should be clear to create a new table that combines them with a union.
+----I'll call the new table All_2022_Trips.
+
+--SELECT *
+--INTO dbo.All_2022_Trips
+--FROM TripData202201
+--UNION
+--SELECT *
+--FROM TripData202202
+--UNION
+--SELECT *
+--FROM TripData202203
+--UNION
+--SELECT *
+--FROM TripData202204
+--UNION
+--SELECT *
+--FROM TripData202205
+--UNION
+--SELECT *
+--FROM TripData202206
+--UNION
+--SELECT *
+--FROM TripData202207
+--UNION
+--SELECT *
+--FROM TripData202208
+--UNION
+--SELECT *
+--FROM TripData202209
+--UNION
+--SELECT *
+--FROM TripData202210
+--UNION
+--SELECT *
+--FROM TripData202211
+--UNION
+--SELECT *
+--FROM TripData202212;
+
+----Now I'll take a sample of the new table.
+
+--SELECT TOP 1000 * FROM All_2022_Trips
+
+----I can see that there are some NULL values peppered through the data, particularly in the station name and station id columns.
+----I want to try and fill these in by inferring from matching sets of names, id numbers, and/or coordinate pairs.
+----I'll make a backup of the current table before I start applying updates.
+
+--SELECT *
+--INTO B_All_2022_Trips_Backup1
+--FROM All_2022_Trips;
+
+----I'll use four common table expressions to fill in null values in the station name / id columns that have matching pairs to infer from.
+
+--WITH CTE AS
+--(
+--  SELECT 
+--    start_station_id, 
+--    start_station_name, 
+--    MAX(start_station_name) OVER (PARTITION BY start_station_id) as new_start_station_name
+--  FROM 
+--    All_2022_Trips
+--)
+--UPDATE CTE 
+--SET start_station_name = new_start_station_name
+--WHERE start_station_name IS NULL;
+
+--WITH CTE AS
+--(
+--  SELECT 
+--    end_station_id, 
+--    end_station_name, 
+--    MAX(end_station_name) OVER (PARTITION BY end_station_id) as new_end_station_name
+--  FROM 
+--    All_2022_Trips
+--)
+--UPDATE CTE 
+--SET end_station_name = new_end_station_name
+--WHERE end_station_name IS NULL;
+
+--WITH CTE AS
+--(
+--  SELECT 
+--    start_station_id, 
+--    start_station_name, 
+--    MAX(start_station_id) OVER (PARTITION BY start_station_name) as new_start_station_id
+--  FROM 
+--    All_2022_Trips
+--)
+--UPDATE CTE 
+--SET start_station_id = new_start_station_id
+--WHERE start_station_id IS NULL;
+
+--WITH CTE AS
+--(
+--  SELECT 
+--    end_station_id, 
+--    end_station_name, 
+--    MAX(end_station_id) OVER (PARTITION BY end_station_name) as new_end_station_id
+--  FROM 
+--    All_2022_Trips
+--)
+--UPDATE CTE 
+--SET end_station_id = new_end_station_id
+--WHERE end_station_id IS NULL;
+
+----Now I'll double check to see if there are any null values left in these columns.
+
+--SELECT ride_id
+--FROM All_2022_Trips
+--WHERE start_station_id IS NULL
+--OR start_station_name IS NULL
+--OR end_station_id IS NULL
+--OR end_station_name IS NULL;
+
+----There are 1065 rows with station name values that didn't have a matching pair to refer to. They are all associated with three stations in particular.
+
+--SELECT * 
+--FROM All_2022_Trips 
+--WHERE (start_station_name = 'Green St & Madison Ave*' OR start_station_name = 'Loomis St & Lexington St*') 
+--AND end_station_id IS NOT NULL;
+
+--SELECT * 
+--FROM All_2022_Trips 
+--WHERE end_station_name = 'Divvy Valet - Oakwood Beach' 
+--AND start_station_id IS NOT NULL;
+
+----I found id matches for these station names in the other columns, so I'll just do a quick update on these three specific instances.
+
+--UPDATE All_2022_Trips
+--SET end_station_id = 'chargingstx07'
+--WHERE end_station_name = 'Green St & Madison Ave*';
+
+--UPDATE All_2022_Trips
+--SET end_station_id = 'chargingstx06'
+--WHERE end_station_name = 'Loomis St & Lexington St*';
+
+--UPDATE All_2022_Trips
+--SET start_station_id = 'Divvy Valet - Oakwood Beach'
+--WHERE start_station_name = 'Divvy Valet - Oakwood Beach';
+
+----Now I'll check to see if there are any NULL values left in the whole table.
+
+--SELECT *
+--FROM All_2022_Trips
+--	WHERE ride_id IS NULL
+--	OR rideable_type IS NULL
+--	OR started_at IS NULL
+--	OR ended_at IS NULL
+--	OR start_lat IS NULL
+--	OR start_lng IS NULL
+--	OR end_lat IS NULL
+--	OR end_lng IS NULL
+--	OR member_casual IS NULL
+--	OR start_station_id IS NULL
+--	OR start_station_name IS NULL
+--	OR end_station_id IS NULL
+--	OR end_station_name IS NULL;
+
+----The end_lat and end_lng columns for end_station_name = 'Yates Blvd & 75th St' are all NULL, but I do have coordinates associated with the same value in start_station_name.
+----Since the coordinates for a given station are all fairly close together and they're all describing the same general location, I will simply apply the average of start_lat and start_lng for this station to the all NULL values in end_lat and end_lng.
+	
+--UPDATE All_2022_Trips
+--SET end_lat = (
+--    SELECT ROUND(AVG(start_lat), 6)
+--    FROM All_2022_Trips
+--    WHERE start_station_id = 'KA1503000024'
+--    AND start_lat IS NOT NULL
+--)
+--WHERE end_station_id = 'KA1503000024'
+--AND end_lat IS NULL;
+
+--UPDATE All_2022_Trips
+--SET end_lng = (
+--    SELECT ROUND(AVG(start_lng), 6)
+--    FROM All_2022_Trips
+--    WHERE start_station_id = 'KA1503000024'
+--    AND start_lng IS NOT NULL
+--)
+--WHERE end_station_id = 'KA1503000024'
+--AND end_lng IS NULL;
+
+----Executing my NULL check again returns 0 rows.
+----Now all of the NULL values in the table have been addressed.
+----Next I'll investigate any further cleaning that might be necessary.
+
+----I know that ride_id should be distinct for each row so I'll check for duplicates.
+
+--SELECT *
+--FROM All_2022_Trips
+--WHERE ride_id IN (
+--    SELECT ride_id
+--    FROM All_2022_Trips
+--    GROUP BY ride_id
+--    HAVING COUNT(*) > 1
+--);
+
+----There are 18 rows with very large numbers with duplicates in the ride_id column, two sets of 9 numbers. It's not a big enough number of records to have any noticable impact on the broader implications and I don't think it's worth the time to fix, so I'll just delete half of the duplicates.
+----It isn't a big enough number of records to have any noticable impact, and I don't think it's really worth the time to fix, so I'll just delete half of the duplicates to avoid any potential issues associated with having duplicate ride_id's down the line.
+----I'll make another backup first incase this causes any unforseen issues.
+
+--SELECT *
+--INTO B_All_2022_Trips_Backup2
+--FROM All_2022_Trips;
+
+--WITH cte AS (
+--    SELECT ROW_NUMBER() OVER(PARTITION BY ride_id ORDER BY (SELECT NULL)) AS RowNum
+--    FROM All_2022_Trips
+--)
+--DELETE FROM cte WHERE RowNum > 1;
+
+----Next, I noticed that my ride_length column changed to the wrong format when I imported the excel files, so I'll fix that.
+
+--ALTER TABLE All_2022_Trips
+--ADD ride_length_time TIME;
+
+--UPDATE All_2022_Trips 
+--SET ride_length_time = CAST(ride_length AS TIME);
+
+--ALTER TABLE All_2022_Trips
+--DROP COLUMN ride_length;
+
+--EXEC sp_rename 'All_2022_Trips.ride_length_time', 'ride_length', 'COLUMN';
+
+----I'm planning on visually addressing outliers in Tableau, so that is all the cleaning I can spot for right now. It's time to start asking questions to see what the data has to offer.
+
