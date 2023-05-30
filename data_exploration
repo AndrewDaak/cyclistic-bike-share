@@ -73,7 +73,7 @@
 --    rideable_type,
 --    member_casual;
 
-----The weekly_activity view shows how rider activity varies depending on the day of the week.
+----The weekly_activity view shows how rider activity changes depending on the day of the week.
 
 --CREATE VIEW weekly_activity AS
 --SELECT
@@ -84,3 +84,16 @@
 --GROUP BY
 --    member_casual,
 --    day_of_week;
+
+----The monthly_activity view shows how rider activity varies from month to month.
+
+--CREATE VIEW monthly_activity AS
+--SELECT 
+--    member_casual, 
+--    DATENAME(MONTH, started_at) AS month, 
+--    COUNT(*) AS number_of_rides 
+--FROM 
+--    All_2022_Trips 
+--GROUP BY 
+--    member_casual, 
+--    DATENAME(MONTH, started_at);
