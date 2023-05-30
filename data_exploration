@@ -58,20 +58,6 @@
 --WHERE start_station_name NOT IN (SELECT end_station_name FROM All_2022_Trips WHERE ended_at BETWEEN started_at AND started_at + INTERVAL '1' HOUR)
 --GROUP BY start_station_name;
 
-------Station empty times.
-
---CREATE VIEW station_empty_times AS
---SELECT start_station_name, COUNT(*) AS empty_times
---FROM All_2022_Trips
---WHERE start_station_name NOT IN
---(
---    SELECT end_station_name 
---    FROM All_2022_Trips 
---    WHERE ended_at BETWEEN started_at
---    AND DATEADD(hour, 1, started_at)
---)
---GROUP BY start_station_name;
-
 ----Prefered rideable type.
 
 --CREATE VIEW preferred_rideable_type AS
