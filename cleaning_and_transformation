@@ -8,23 +8,25 @@
 ----Why would casual riders buy Cyclistic annual memberships?
 ----How can Cyclistic use digital media to influence casual riders to become members?
 
-----I also want to thorougly inspect and clean all of the data, and explore what other insights I might be able to glean.
-----First I want to back up my original tables, just in case. (I put a 'B_' in front of the backup table names to avoid accidently auto-filling with them when I press [T] -> [Tab])
+----In addition to answering these questions I also want to thorougly inspect and clean all of the data, to validate its integrity and explore what other insights I might be able to glean.
+----I'll walk through every step of my process in the comments.
+
+----First and foremost I want to back up my imported tables, just in case.
 
 --USE Cyclistic
 
---SELECT * INTO B_TripData202201_backup FROM TripData202201;
---SELECT * INTO B_TripData202202_backup FROM TripData202202;
---SELECT * INTO B_TripData202203_backup FROM TripData202203;
---SELECT * INTO B_TripData202204_backup FROM TripData202204;
---SELECT * INTO B_TripData202205_backup FROM TripData202205;
---SELECT * INTO B_TripData202206_backup FROM TripData202206;
---SELECT * INTO B_TripData202207_backup FROM TripData202207;
---SELECT * INTO B_TripData202208_backup FROM TripData202208;
---SELECT * INTO B_TripData202209_backup FROM TripData202209;
---SELECT * INTO B_TripData202210_backup FROM TripData202210;
---SELECT * INTO B_TripData202211_backup FROM TripData202211;
---SELECT * INTO B_TripData202212_backup FROM TripData202212;
+--SELECT * INTO TripData202201_backup FROM TripData202201;
+--SELECT * INTO TripData202202_backup FROM TripData202202;
+--SELECT * INTO TripData202203_backup FROM TripData202203;
+--SELECT * INTO TripData202204_backup FROM TripData202204;
+--SELECT * INTO TripData202205_backup FROM TripData202205;
+--SELECT * INTO TripData202206_backup FROM TripData202206;
+--SELECT * INTO TripData202207_backup FROM TripData202207;
+--SELECT * INTO TripData202208_backup FROM TripData202208;
+--SELECT * INTO TripData202209_backup FROM TripData202209;
+--SELECT * INTO TripData202210_backup FROM TripData202210;
+--SELECT * INTO TripData202211_backup FROM TripData202211;
+--SELECT * INTO TripData202212_backup FROM TripData202212;
 
 ----I want to create a new table combining all 12 tables to more easily work with data for the whole year, so I will write a query that checks for column name or data type conflicts between the tables.
 
@@ -100,7 +102,7 @@
 --ALTER TABLE TripData202212
 --ALTER COLUMN start_station_id NVARCHAR(255);
 
-----For end_station_id column.
+----And for the end_station_id column.
 
 --ALTER TABLE TripData202201
 --ALTER COLUMN end_station_id NVARCHAR(255);
@@ -182,12 +184,11 @@
 
 --SELECT TOP 1000 * FROM All_2022_Trips
 
-----I can see that there are some NULL values peppered through the data, particularly in the station name and station id columns.
-----I want to try and fill these in by inferring from matching sets of names, id numbers, and/or coordinate pairs.
+----I can see that there are some NULL values peppered throughout the data, particularly in the station name and station id columns. I should be able to fill these in by inferring their values from matching sets of names, id numbers, and/or coordinate pairs.
 ----I'll make a backup of the current table before I start applying updates.
 
 --SELECT *
---INTO B_All_2022_Trips_Backup1
+--INTO All_2022_Trips_backup1
 --FROM All_2022_Trips;
 
 ----I'll use four common table expressions to fill in null values in the station name / id columns that have matching pairs to infer from.
@@ -342,7 +343,7 @@
 ----I'll make another backup first incase this causes any unforseen issues.
 
 --SELECT *
---INTO B_All_2022_Trips_Backup2
+--INTO All_2022_Trips_backup2
 --FROM All_2022_Trips;
 
 --WITH cte AS
@@ -365,7 +366,7 @@
 
 --EXEC sp_rename 'All_2022_Trips.ride_length_time', 'ride_length', 'COLUMN';
 
-----I also want to add a column that lists the names of the days instead of the numbers assigned to them.
+----I also want to add a column that lists the names of the days instead of the numbers assigned to them, and a column for the month as well.
 
 --ALTER TABLE All_2022_Trips
 --ADD day_of_week AS
@@ -381,6 +382,99 @@
 --    END
 --);
 
-----I'm planning on visually addressing outliers in Tableau, so that is all the cleaning and transformation I want to do for right now. It's time to start asking questions to see what insights the data has to offer.
+--ALTER TABLE All_2022_Trips
+--ADD month_name VARCHAR(10);
+
+--UPDATE All_2022_Trips
+--SET month_name = DATENAME(MONTH, started_at);
 
 
+
+----Now I'll see if I can find any outliers. 
+
+--SELECT TOP 1000
+--    ride_id,
+--    ride_length
+--FROM 
+--    All_2022_Trips
+--ORDER BY ride_length DESC;
+
+----I have noticed an issue; when I changed the ride_length column format to HH:MM:SS, I would have cut off any values >= 24 hours.
+----Twenty-four hours sounds like a long bike ride, especially when you're paying by the minute, but there are a fair number of values running right up to 23:59:59, so I should investigate.
+
+
+--SELECT
+--    (SELECT COUNT(*) 
+--     FROM All_2022_Trips
+--     WHERE DATEDIFF(SECOND, started_at, ended_at) < 10800) AS under_3_hours,
+    
+--    (SELECT COUNT(*) 
+--     FROM All_2022_Trips
+--     WHERE DATEDIFF(SECOND, started_at, ended_at) >= 10800) AS over_3_hours,
+    
+--    (SELECT COUNT(*) 
+--     FROM All_2022_Trips
+--     WHERE DATEDIFF(SECOND, started_at, ended_at) >= 21600) AS over_6_hours,
+    
+--    (SELECT COUNT(*) 
+--     FROM All_2022_Trips
+--     WHERE DATEDIFF(SECOND, started_at, ended_at) >= 43200) AS over_12_hours,
+    
+--    (SELECT COUNT(*) 
+--     FROM All_2022_Trips
+--     WHERE DATEDIFF(SECOND, started_at, ended_at) >= 86400) AS over_24_hours
+
+--SELECT 
+--    SUM(CAST(DATEDIFF(SECOND, started_at, ended_at) AS BIGINT)) AS total_ride_duration_under_24
+--FROM 
+--    All_2022_Trips
+--WHERE 
+--    DATEDIFF(SECOND, started_at, ended_at) < 86400;
+
+--SELECT 
+--    SUM(CAST(DATEDIFF(SECOND, started_at, ended_at) AS BIGINT)) AS total_ride_duration_24_plus
+--FROM 
+--    All_2022_Trips
+--WHERE 
+--    DATEDIFF(SECOND, started_at, ended_at) >= 86400;
+
+--SELECT 
+--    SUM(CAST(DATEDIFF(SECOND, started_at, ended_at) AS BIGINT)) AS total_ride_duration_seconds
+--FROM 
+--    All_2022_Trips
+--WHERE 
+--    DATEDIFF(SECOND, started_at, ended_at) >= 43200
+--AND
+--    DATEDIFF(SECOND, started_at, ended_at) <= 86400;
+
+----I'll add a ride_length_seconds column so I don't have to keep nesting it in queries to find total seconds after this.
+
+--ALTER TABLE All_2022_Trips
+--ADD ride_length_seconds AS DATEDIFF(SECOND, started_at, ended_at);
+
+----After a bit of investigating and some quick math, I have found that there are about 22,000 instances of trips longer than 6 hours, and of those there are 5360 values over 24 hours.
+----This set of records represents less than 0.1% of the data, but it accounts for nearly 20% of the sum total of trip durations.
+----Since users pay by the minute for bike rentals and are penalized for rides lasting longer than 3 hours, I have to imagine that many - if not most - of these records are in error, or by mistake such as improperly docking the bike at a station or losing a bike.
+----I can't say for certain without some additional information, and of course not all outliers are errors, but what I do know is that this is a small and highly irregular subset of the data that massively skews my analysis, so I think it is best to omit these entries.
+----The rides between 12 and 24 hours only account for just over 2% of the total trip duration, so even if there are also some irregularities there, they will be much less impactful.
+----I'll make another backup first.
+
+--SELECT *
+--INTO All_2022_Trips_backup3
+--FROM All_2022_Trips;
+
+----While I'm at it I should check the other end of the time table as well.
+
+--SELECT *
+--FROM All_2022_Trips
+--WHERE ride_length_seconds <= 0;
+
+----There are 531 rows with 0 or negative values for ride_length_seconds. Since those data points are either impossible or meaningless, I'll dispose of those records as well.
+
+--DELETE FROM All_2022_Trips
+--WHERE DATEDIFF(SECOND, started_at, ended_at) > 86400;
+
+--DELETE FROM All_2022_Trips
+--WHERE ride_length_seconds <= 0;
+
+----That is all of the cleaing and transformation I want to do for the moment. Now I can start asking questions about what the data can show us.
