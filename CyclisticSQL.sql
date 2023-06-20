@@ -443,11 +443,11 @@ WHERE ride_length_seconds > 86400;
 DELETE FROM All_2022_Trips
 WHERE ride_length_seconds <= 0;
 
-That is all of the cleaing I want to do for now, so next I want to create some views to visually explore the data in Tableau.
+--That is all of the cleaing I want to do for now, so next I want to create some views to visually explore the data in Tableau.
 
 
 
-(I created a number of different views for exploration, but I'm just going to keep the ones I actually want to use for my visualization here.)
+--I created a number of different views for exploration, but I'm just going to keep the ones I actually want to present in a visualization here.
 
 --The avg_ride_length_minutes view shows the average trip length for each type of rider.
 
